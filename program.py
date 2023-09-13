@@ -1,56 +1,37 @@
-from tkinter import *
-import tkinter.font
-from gpiozero import LED
-import RPi.GPIO
-RPi.GPIO.setmode(RPi.GPIO.BCM)
+import tkinter as tk
+import RPi.GPIO as GPIO
 
-Red= LED(14)
-White= LED(10)
-Green= LED(6)
-win=Tk()
-win.title("LED BLINK")
-myFont=tkinter.font.Font(family='Arial',size=12,weight="bold")
+LED_PINS = {
+    "Red": 17,    
+    "Green": 18,
+    "Blue": 27,
+}
 
-def RED_LED_ON():
-	if(Red.is_lit):
-		Red.off()
-		redButton["text"]="TURN RED LED ON"
-	else:
-		Red.on()
-		redButton["text"]="TURN RED LED OFF"
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
 
-def WHITE_LED_ON():
-	if(White.is_lit):
-		White.off()
-		whiteButton["text"]="TURN WHITE LED ON"
-	else:
-		White.on()
-		whiteButton["text"]="TURN WHITE LED OFF"
+for pin in LED_PINS.values():
+    GPIO.setup(pin, GPIO.OUT)
+    GPIO.output(pin, GPIO.LOW)
 
-def GREEN_LED_ON():
-	if(Green.is_lit):
-		Green.off()
-		greenButton["text"]="TURN GREEN LED ON"
-	else:
-		Green.on()
-		greenButton["text"]="TURN GREEN LED OFF"
+def set_led_color(color):
+    for pin in LED_PINS.values():
+        GPIO.output(pin, GPIO.LOW)  
+    GPIO.output(LED_PINS[color], GPIO.HIGH)
+root = tk.Tk()
+root.title("LED Controller")
+root.geometry("400x300")
+label = tk.Label(root, text="Select LED Color", font=("Comic Sans", 20))
+label.pack(pady=20)
 
-def close():
-	RPi.GPIO.cleanup()
-	win.destroy()
+def button_click(color):
+    set_led_color(color)
 
-redButton=Button(win,text="TURN RED LED ON",font=myFont,command=RED_LED_ON)
-redButton.grid(row=0,column=1)
+for color in LED_PINS.keys():
+    button = tk.Button(root, text=color, command=lambda c=color: button_click(c))
+    button.pack(pady=15)
 
-whiteButton=Button(win,text="TURN WHITE LED ON",font=myFont,command=WHITE_LED_ON)
-whiteButton.grid(row=0,column=3)
-
-greenButton=Button(win,text="TURN GREEN LED ON",font=myFont,command=GREEN_LED_ON)
-greenButton.grid(row=0,column=6)
-
-exitButton=Button(win,text="EXIT WINDOW",font=myFont,command=close,bg='red')
-exitButton.grid(row=2,column=3)
-
-win.protocol("WM_DELETE_WINDOW",close)
-
-win.mainloop()
+exit_button = tk.Button(root, text="Exit", command=root.quit)
+exit_button.pack(pady=10)
+root.mainloop()
+GPIO.cleanup()
